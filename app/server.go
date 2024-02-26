@@ -24,7 +24,7 @@ func main() {
 	}
 	defer connection.Close()
 
-	go handleConnection(connection, buf, response)
+	handleConnection(connection, buf, response)
 
 }
 
