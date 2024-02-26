@@ -30,12 +30,18 @@ func main() {
 
 func handleConnection(conn net.Conn, buf []byte, response []byte) {
 	defer conn.Close()
-	_, err := conn.Read(buf)
-	if err != nil {
-		fmt.Println("Error reading from the connection")
+	for {
+		_, err := conn.Read(buf)
+		if err != nil {
+			fmt.Println("Error reading from the connection")
+			break
+		}
+		_, err = conn.Write(response)
+		if err != nil {
+			fmt.Println("Error while writing response")
+			break
+		}
 	}
-	_, err = conn.Write(response)
-	if err != nil {
-		fmt.Println("Error while writing response")
-	}
+
+	fmt.Println("sucess")
 }
