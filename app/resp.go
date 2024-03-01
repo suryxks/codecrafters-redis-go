@@ -38,7 +38,7 @@ func (v *Value) Marshal() []byte {
 func (v *Value) marshalArray() []byte {
 	len := len(v.array)
 	var bytes []byte
-	bytes = append(bytes, ARRAY)
+	bytes = append(bytes, []byte(ARRAY)...)
 	bytes = append(bytes, strconv.Itoa(len)...)
 	bytes = append(bytes, '\r', '\n')
 
@@ -50,7 +50,7 @@ func (v *Value) marshalArray() []byte {
 }
 func (v *Value) marshalString() []byte {
 	var bytes []byte
-	bytes = append(bytes, STRING)
+	bytes = append(bytes, []byte(STRING)...)
 	bytes = append(bytes, strconv.Itoa(len(v.str))...)
 	bytes = append(bytes, '\r', '\n')
 	bytes = append(bytes, []byte(v.str)...)
@@ -59,7 +59,7 @@ func (v *Value) marshalString() []byte {
 }
 func (v *Value) marshalBulk() []byte {
 	var bytes []byte
-	bytes = append(bytes, BULK)
+	bytes = append(bytes, []byte(BULK)...)
 	bytes = append(bytes, strconv.Itoa(len(v.bulk))...)
 	bytes = append(bytes, '\r', '\n')
 	bytes = append(bytes, v.bulk...)
@@ -184,11 +184,11 @@ func (r *Resp) readString() (Value, error) {
 }
 
 const (
-	STRING  = "+"
-	ARRAY   = "*"
-	ERROR   = "-"
-	INTEGER = ":"
-	BULK    = "$"
+	STRING  string = "+"
+	ARRAY   string = "*"
+	ERROR   string = "-"
+	INTEGER string = ":"
+	BULK    string = "$"
 )
 
 func NewResp(rd io.Reader) *Resp {
