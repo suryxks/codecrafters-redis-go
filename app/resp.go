@@ -105,7 +105,7 @@ func (r *Resp) Read() (Value, error) {
 	if err != nil {
 		return Value{}, err
 	}
-	switch _type {
+	switch string(_type) {
 	case ARRAY:
 		return r.readArray()
 	case BULK:
@@ -184,11 +184,11 @@ func (r *Resp) readString() (Value, error) {
 }
 
 const (
-	STRING  = '+'
-	ARRAY   = '*'
-	ERROR   = '-'
-	INTEGER = ':'
-	BULK    = '$'
+	STRING  = "+"
+	ARRAY   = "*"
+	ERROR   = "-"
+	INTEGER = ":"
+	BULK    = "$"
 )
 
 func NewResp(rd io.Reader) *Resp {
