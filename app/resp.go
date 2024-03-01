@@ -105,11 +105,10 @@ func (r *Resp) Read() (Value, error) {
 	if err != nil {
 		return Value{}, err
 	}
-	fmt.Println(string(_type) == ARRAY)
-	fmt.Println("type is arr")
+
 	switch string(_type) {
 	case ARRAY:
-		fmt.Println("here")
+
 		return r.readArray()
 	case BULK:
 		return r.readBulk()
@@ -147,7 +146,7 @@ func (r *Resp) readArray() (Value, error) {
 		}
 		v.array = append(v.array, value)
 	}
-	fmt.Println("here also")
+
 	return v, nil
 }
 
