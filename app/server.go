@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 )
 
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Println("Logs from your program will appear here!")
-	var response = []byte("+PONG\r\n")
+	// var response = []byte("+PONG\r\n")
 	listner, err := net.Listen("tcp", "0.0.0.0:6379")
 	if err != nil {
 		fmt.Println("Failed to bind to port 6379")
@@ -17,7 +18,7 @@ func main() {
 	}
 	for {
 		var connection net.Conn
-		buf := make([]byte, 1024)
+		// buf := make([]byte, 1024)
 		connection, err = listner.Accept()
 		if err != nil {
 			fmt.Println("Error accepting connection: ", err.Error())
@@ -26,25 +27,42 @@ func main() {
 		}
 		defer connection.Close()
 
-		go handleConnection(connection, buf, response)
+		go handleConnection(connection)
 	}
 
 }
 
-func handleConnection(conn net.Conn, buf []byte, response []byte) {
+func handleConnection(conn net.Conn) {
 	defer conn.Close()
 	for {
-		_, err := conn.Read(buf)
+		resp := NewResp(conn)
+
+		value, err := resp.Read()
+
 		if err != nil {
-			fmt.Println("Error reading from the connection")
-			break
+			fmt.Println(err.Error())
 		}
-		_, err = conn.Write(response)
-		if err != nil {
-			fmt.Println("Error while writing response")
-			break
+		writer := NewWriter(conn)
+
+		switch value.typ {
+		case "array":
+			{
+				switch value.array[0].bulk {
+				case "echo":
+					writer.Write(Value{typ: "string", str: value.array[1].bulk})
+				}
+			}
+		case "string":
+			{
+				switch strings.ToLower(value.str) {
+				case "ping":
+					writer.Write(Value{typ: "string", str: "PONG"})
+				}
+			}
+		default:
+			writer.Write(Value{typ: "string", str: "OK"})
 		}
+
 	}
 
-	fmt.Println("sucess")
 }
