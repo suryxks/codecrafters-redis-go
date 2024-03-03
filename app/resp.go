@@ -21,20 +21,24 @@ type Value struct {
 }
 
 func (v *Value) Marshal() []byte {
+
 	switch v.typ {
+
 	case "array":
 		return v.marshalArray()
 	case "bulk":
 		return v.marshalBulk()
-
 	case "string":
 		return v.marshalString()
+	case "error":
+		return v.marshalError()
 
 	default:
 		return []byte{}
 
 	}
 }
+
 func (v *Value) marshalArray() []byte {
 	len := len(v.array)
 	var bytes []byte
@@ -51,8 +55,6 @@ func (v *Value) marshalArray() []byte {
 func (v *Value) marshalString() []byte {
 	var bytes []byte
 	bytes = append(bytes, []byte(STRING)...)
-	bytes = append(bytes, strconv.Itoa(len(v.str))...)
-	bytes = append(bytes, '\r', '\n')
 	bytes = append(bytes, []byte(v.str)...)
 	bytes = append(bytes, '\r', '\n')
 	return bytes
@@ -65,6 +67,14 @@ func (v *Value) marshalBulk() []byte {
 	bytes = append(bytes, v.bulk...)
 	bytes = append(bytes, '\r', '\n')
 
+	return bytes
+}
+func (v *Value) marshalError() []byte {
+	var bytes []byte
+	bytes = append(bytes, []byte(BULK)...)
+	bytes = append(bytes, []byte(ERROR)...)
+	bytes = append(bytes, []byte("1")...)
+	bytes = append(bytes, '\r', '\n')
 	return bytes
 }
 func (r *Resp) readLine() (line []byte, n int, err error) {

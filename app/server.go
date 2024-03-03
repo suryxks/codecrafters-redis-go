@@ -7,6 +7,13 @@ import (
 	"strings"
 )
 
+type RedisKey string
+type ResdisValue string
+
+type RedisDB struct {
+	Store map[RedisKey]ResdisValue
+}
+
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Println("Logs from your program will appear here!")
@@ -15,6 +22,9 @@ func main() {
 	if err != nil {
 		fmt.Println("Failed to bind to port 6379")
 		os.Exit(1)
+	}
+	db := RedisDB{
+		Store: make(map[RedisKey]ResdisValue),
 	}
 	for {
 		var connection net.Conn
@@ -27,12 +37,12 @@ func main() {
 		}
 		defer connection.Close()
 
-		go handleConnection(connection)
+		go handleConnection(connection, &db)
 	}
 
 }
 
-func handleConnection(conn net.Conn) {
+func handleConnection(conn net.Conn, db *RedisDB) {
 	defer conn.Close()
 	for {
 		resp := NewResp(conn)
@@ -52,6 +62,18 @@ func handleConnection(conn net.Conn) {
 					writer.Write(Value{typ: "bulk", bulk: value.array[1].bulk})
 				case "ping":
 					writer.Write(Value{typ: "bulk", bulk: "PONG"})
+				case "set":
+					db.Store[RedisKey(value.array[1].bulk)] = ResdisValue(value.array[2].bulk)
+					writer.Write(Value{typ: "string", str: "OK"})
+				case "get":
+					{
+						val := db.Store[RedisKey(value.array[1].bulk)]
+						if val == "" {
+							writer.Write(Value{typ: "error", str: "not found"})
+						} else {
+							writer.Write(Value{typ: "bulk", bulk: string(val)})
+						}
+					}
 				}
 			}
 		case "string":
