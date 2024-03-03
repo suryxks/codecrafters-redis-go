@@ -77,12 +77,10 @@ func (r *Resp) readLine() (line []byte, n int, err error) {
 		n += 1
 		line = append(line, b)
 
-		if len(line) >= 2 && strings.Contains(string(line), string("\\r")) {
+		if len(line) >= 2 && strings.Contains(string(line), string("\r\n")) {
 			break
 		}
 	}
-	r.reader.ReadByte()
-	r.reader.ReadByte()
 
 	return line[:len(line)-2], n, nil
 }
@@ -108,7 +106,6 @@ func (r *Resp) Read() (Value, error) {
 
 	switch string(_type) {
 	case ARRAY:
-
 		return r.readArray()
 	case BULK:
 		return r.readBulk()
@@ -135,8 +132,6 @@ func (r *Resp) readArray() (Value, error) {
 	}
 	r.reader.ReadByte()
 	r.reader.ReadByte()
-	r.reader.ReadByte()
-	r.reader.ReadByte()
 
 	for i := 0; i < lengthInt; i++ {
 
@@ -158,8 +153,6 @@ func (r *Resp) readBulk() (Value, error) {
 	if err != nil {
 		return v, err
 	}
-	r.reader.ReadByte()
-	r.reader.ReadByte()
 	r.reader.ReadByte()
 	r.reader.ReadByte()
 

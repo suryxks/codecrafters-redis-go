@@ -49,7 +49,7 @@ func handleConnection(conn net.Conn) {
 			{
 				switch strings.ToLower(value.array[0].bulk) {
 				case "echo":
-					writer.Write(Value{typ: "bulk", str: value.array[1].bulk})
+					writer.Write(Value{typ: "bulk", bulk: value.array[1].bulk})
 				case "ping":
 					writer.Write(Value{typ: "bulk", bulk: "PONG"})
 				}
