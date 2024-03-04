@@ -4,11 +4,17 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type RedisKey string
-type ResdisValue string
+type ResdisValue struct {
+	value     string
+	px        time.Duration
+	savedTime time.Time
+}
 
 type RedisDB struct {
 	Store map[RedisKey]ResdisValue
@@ -63,16 +69,42 @@ func handleConnection(conn net.Conn, db *RedisDB) {
 				case "ping":
 					writer.Write(Value{typ: "bulk", bulk: "PONG"})
 				case "set":
-					db.Store[RedisKey(value.array[1].bulk)] = ResdisValue(value.array[2].bulk)
-					writer.Write(Value{typ: "string", str: "OK"})
-				case "get":
 					{
-						val := db.Store[RedisKey(value.array[1].bulk)]
-						if val == "" {
+						lenOfArr := len(value.array)
+						if lenOfArr < 5 {
+							db.Store[RedisKey(value.array[1].bulk)] = ResdisValue{
+								value:     (value.array[2].bulk),
+								savedTime: time.Now(),
+							}
+						} else {
+							timeout, err := strconv.Atoi(value.array[4].bulk)
+							if err != nil {
+								fmt.Println(err.Error())
+								os.Exit(1)
+							}
+							db.Store[RedisKey(value.array[1].bulk)] = ResdisValue{
+								value:     (value.array[2].bulk),
+								px:        time.Duration(timeout),
+								savedTime: time.Now(),
+							}
+						}
+
+						writer.Write(Value{typ: "string", str: "OK"})
+					}
+				case "get":
+
+					{
+						key := RedisKey(value.array[1].bulk)
+						val := db.Store[key]
+						if time.Since(val.savedTime) > val.px {
+							delete(db.Store, key)
+						}
+						if val.value == "" {
 							writer.Write(Value{typ: "error", str: "not found"})
 						} else {
-							writer.Write(Value{typ: "bulk", bulk: string(val)})
+							writer.Write(Value{typ: "bulk", bulk: string(val.value)})
 						}
+
 					}
 				}
 			}
